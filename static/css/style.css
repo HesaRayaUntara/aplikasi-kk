@@ -1,0 +1,26 @@
+body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.nav-link { display:flex; align-items:center; gap:.75rem; border-radius:.65rem; padding:.7rem .8rem; color:#cbd5e1; font-size:.875rem; transition:background-color .15s ease,color .15s ease; }
+.nav-link:hover { background:#1e293b; color:#fff; }
+.nav-link-active { background:#1d4ed8; color:#fff; font-weight:600; box-shadow:0 1px 2px #02061740; }
+.nav-link-active:hover { background:#2563eb; }
+.panel-card { border:1px solid #e2e8f0; border-radius:.875rem; background:#fff; padding:1.25rem; box-shadow:0 1px 2px #0f172a08; }
+.form-control { display:block; width:100%; min-height:2.75rem; border:1px solid #cbd5e1; border-radius:.55rem; background:#fff; padding:.65rem .8rem; color:#1e293b; font-size:.875rem; box-shadow:0 1px 2px #0f172a08; transition:border-color .15s ease,box-shadow .15s ease; }
+.form-control::placeholder { color:#94a3b8; }
+.form-control:focus { border-color:#3b82f6; box-shadow:0 0 0 3px #dbeafe; outline:none; }
+.btn-primary,.btn-secondary,.btn-success { display:inline-flex; align-items:center; gap:.5rem; min-height:2.65rem; border-radius:.6rem; padding:.65rem 1rem; font-size:.875rem; font-weight:600; transition:background-color .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease; }
+.btn-primary { background:#2563eb; color:#fff; box-shadow:0 1px 2px #0f172a1a; }
+.btn-primary:hover { background:#1d4ed8; }
+.btn-secondary { border:1px solid #cbd5e1; background:#fff; color:#334155; }
+.btn-secondary:hover { border-color:#94a3b8; background:#f8fafc; }
+.btn-success { background:#059669; color:#fff; box-shadow:0 1px 2px #0f172a1a; }
+.btn-success:hover { background:#047857; }
+.open-label { display:none; }
+.member-accordion[open] > summary { background:#eff6ff; }
+.member-accordion[open] > summary .closed-label { display:none; }
+.member-accordion[open] > summary .open-label { display:inline; }
+.member-detail-wrap { overflow:hidden; }
+@media (min-width:640px) { .panel-card { padding:1.5rem; } }
+button,a,input,textarea,select,summary { -webkit-tap-highlight-color:transparent; }
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:2px solid #3b82f6; outline-offset:2px; }
+::selection { background:#dbeafe; color:#1e3a8a; }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }

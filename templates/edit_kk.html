@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Edit KK - Pengelolaan Data KK{% endblock %}
+{% block content %}
+<div class="mb-6"><a href="{{ url_for('detail_kk', kk_id=kk.id_kk) }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-blue-700"><i data-lucide="arrow-left" class="h-4 w-4"></i>Kembali ke detail KK</a><p class="mt-4 text-sm font-medium text-blue-700">Pembaruan data</p><h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Edit Data Kartu Keluarga</h2><p class="mt-2 text-sm text-slate-500">Perbarui identitas KK dan informasi anggota keluarga.</p></div>
+{% set form_action = url_for('edit_kk', kk_id=kk.id_kk) %}{% set cancel_url = url_for('detail_kk', kk_id=kk.id_kk) %}{% set submit_label = 'Simpan Perubahan' %}
+{% include '_form_kk.html' %}
+{% endblock %}

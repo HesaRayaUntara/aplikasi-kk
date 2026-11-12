@@ -1,0 +1,121 @@
+﻿{% set identity_fields = [
+    ('no_kk', 'Nomor KK'), ('kepala_keluarga', 'Kepala Keluarga'),
+    ('alamat', 'Alamat'), ('rt', 'RT'), ('rw', 'RW'),
+    ('desa_kelurahan', 'Desa / Kelurahan'), ('kecamatan', 'Kecamatan'),
+    ('kabupaten_kota', 'Kabupaten / Kota'), ('provinsi', 'Provinsi'),
+    ('kode_pos', 'Kode Pos'), ('tanggal_dikeluarkan', 'Tanggal Dikeluarkan')
+] %}
+{% set member_fields = member_fields or [
+    ('nama_lengkap', 'Nama Lengkap'), ('nik', 'NIK'), ('jenis_kelamin', 'Jenis Kelamin'),
+    ('tempat_lahir', 'Tempat Lahir'), ('tanggal_lahir', 'Tanggal Lahir'), ('agama', 'Agama'),
+    ('pendidikan', 'Pendidikan'), ('jenis_pekerjaan', 'Jenis Pekerjaan'),
+    ('golongan_darah', 'Golongan Darah'), ('status_perkawinan', 'Status Perkawinan'),
+    ('tanggal_perkawinan', 'Tanggal Perkawinan'), ('status_hubungan', 'Status Hubungan'),
+    ('kewarganegaraan', 'Kewarganegaraan'), ('no_paspor', 'Nomor Paspor'),
+    ('no_kitap', 'Nomor KITAP'), ('nama_ayah', 'Nama Ayah'), ('nama_ibu', 'Nama Ibu')
+] %}
+{% set input_class = 'form-control' %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div role="alert" class="mb-4 flex items-start gap-3 rounded-xl border p-4 text-sm {% if category == 'error' %}border-red-200 bg-red-50 text-red-800{% else %}border-emerald-200 bg-emerald-50 text-emerald-800{% endif %}"><i data-lucide="{% if category == 'error' %}circle-alert{% else %}circle-check{% endif %}" class="mt-0.5 h-5 w-5 shrink-0"></i><p>{{ message }}</p></div>
+    {% endfor %}
+{% endwith %}
+
+<form id="kk-form" method="post" action="{{ form_action }}" class="space-y-6">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    {% if filename is defined %}<input type="hidden" name="source_filename" value="{{ filename }}">{% endif %}
+    <section class="panel-card">
+        <div class="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><i data-lucide="contact-round" class="h-5 w-5"></i></span><div><h2 class="text-lg font-semibold text-slate-900">Identitas Kartu Keluarga</h2><p class="mt-1 text-sm text-slate-500">Periksa dan lengkapi informasi pada dokumen.</p></div></div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {% for key, label in identity_fields %}
+            <div class="{% if key == 'alamat' %}sm:col-span-2{% endif %}">
+                <label for="identity-{{ key }}" class="mb-1.5 block text-sm font-medium text-slate-700">{{ label }}{% if key in ['no_kk', 'kepala_keluarga'] %}<span class="text-red-600"> *</span>{% endif %}</label>
+                {% if key == 'alamat' %}
+                <textarea id="identity-{{ key }}" name="identitas_kk[{{ key }}]" rows="3" class="{{ input_class }}">{{ identitas_kk.get(key, '') or '' }}</textarea>
+                {% else %}
+                <input id="identity-{{ key }}" name="identitas_kk[{{ key }}]" type="text" value="{{ identitas_kk.get(key, '') or '' }}" class="{{ input_class }}" {% if key in ['no_kk', 'kepala_keluarga'] %}required{% endif %} {% if key == 'no_kk' %}inputmode="numeric" maxlength="30"{% elif key in ['rt', 'rw', 'kode_pos'] %}inputmode="numeric"{% elif key == 'tanggal_dikeluarkan' %}placeholder="DD-MM-YYYY" inputmode="numeric"{% endif %}>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel-card">
+        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-start gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700"><i data-lucide="users-round" class="h-5 w-5"></i></span><div><h2 class="text-lg font-semibold text-slate-900">Anggota Keluarga</h2><p class="mt-1 text-sm text-slate-500">Tanggal gunakan format DD-MM-YYYY atau YYYY-MM-DD.</p></div></div>
+            <button type="button" id="add-member" class="btn-secondary shrink-0"><i data-lucide="user-round-plus" class="h-4 w-4"></i>Tambah anggota</button>
+        </div>
+        <div id="members-list" class="space-y-4">
+            {% for member in members %}
+            {% set member_index = loop.index0 %}
+            <fieldset class="member-card rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                <legend class="sr-only">Anggota {{ loop.index }}</legend>
+                <input type="hidden" name="anggota[{{ member_index }}][id_anggota]" data-member-id value="{{ member.get('id_anggota', '') or '' }}">
+                <div class="mb-4 flex items-center justify-between gap-3"><h3 class="flex items-center gap-2 font-semibold text-slate-800"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs text-slate-700"><span class="member-number">{{ loop.index }}</span></span>Anggota keluarga</h3><button type="button" class="remove-member inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-red-700 transition hover:bg-red-50"><i data-lucide="trash-2" class="h-4 w-4"></i>Hapus</button></div>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {% for key, label in member_fields %}
+                    <div>
+                        <label for="member-{{ member_index }}-{{ key }}" class="mb-1.5 block text-sm font-medium text-slate-700">{{ label }}{% if key == 'nama_lengkap' %}<span class="text-red-600"> *</span>{% endif %}</label>
+                        <input id="member-{{ member_index }}-{{ key }}" name="anggota[{{ member_index }}][{{ key }}]" type="text" value="{{ member.get(key, '') or '' }}" class="{{ input_class }}" data-field="{{ key }}" {% if key == 'nama_lengkap' %}required{% endif %} {% if key == 'nik' %}inputmode="numeric" maxlength="30"{% elif key in ['tanggal_lahir', 'tanggal_perkawinan'] %}placeholder="DD-MM-YYYY" inputmode="numeric"{% endif %}>
+                        {% set confidence = member.get(key ~ '_confidence') %}
+                        {% if confidence is not none %}<p class="mt-1 text-xs {% if confidence < 0.35 %}text-red-600{% elif confidence < 0.60 %}text-amber-600{% else %}text-green-700{% endif %}">Confidence OCR: {{ (confidence * 100)|round(1) }}%{% if confidence < 0.60 %} · Periksa kembali{% endif %}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endfor %}
+        </div>
+        <p id="no-members" class="{% if members %}hidden {% endif %}mt-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Belum ada anggota. Tambahkan setidaknya satu anggota keluarga.</p>
+    </section>
+
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+        <a href="{{ cancel_url }}" class="btn-secondary min-h-11 justify-center">Batal</a>
+        <button type="submit" class="btn-success min-h-11 justify-center"><i data-lucide="save" class="h-4 w-4"></i>{{ submit_label }}</button>
+    </div>
+</form>
+
+<template id="member-template">
+    <fieldset class="member-card rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+        <legend class="sr-only">Anggota</legend><input type="hidden" data-member-id value="">
+        <div class="mb-4 flex items-center justify-between gap-3"><h3 class="flex items-center gap-2 font-semibold text-slate-800"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs text-slate-700"><span class="member-number"></span></span>Anggota keluarga</h3><button type="button" class="remove-member inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-red-700 transition hover:bg-red-50"><i data-lucide="trash-2" class="h-4 w-4"></i>Hapus</button></div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for key, label in member_fields %}
+            <div><label class="mb-1.5 block text-sm font-medium text-slate-700">{{ label }}{% if key == 'nama_lengkap' %}<span class="text-red-600"> *</span>{% endif %}</label><input type="text" value="" class="{{ input_class }}" data-field="{{ key }}" {% if key == 'nama_lengkap' %}required{% endif %} {% if key == 'nik' %}inputmode="numeric" maxlength="30"{% elif key in ['tanggal_lahir', 'tanggal_perkawinan'] %}placeholder="DD-MM-YYYY" inputmode="numeric"{% endif %}></div>
+            {% endfor %}
+        </div>
+    </fieldset>
+</template>
+
+<script>
+(() => {
+    const list = document.getElementById('members-list');
+    const template = document.getElementById('member-template');
+    const empty = document.getElementById('no-members');
+    function renumber() {
+        const cards = [...list.querySelectorAll('.member-card')];
+        cards.forEach((card, index) => {
+            card.querySelector('.member-number').textContent = index + 1;
+            card.querySelector('legend').textContent = 'Anggota ' + (index + 1);
+            card.querySelector('[data-member-id]').name = 'anggota[' + index + '][id_anggota]';
+            card.querySelectorAll('[data-field]').forEach(input => {
+                input.name = 'anggota[' + index + '][' + input.dataset.field + ']';
+                input.id = 'member-' + index + '-' + input.dataset.field;
+                const label = input.closest('div')?.querySelector('label');
+                if (label) label.htmlFor = input.id;
+            });
+        });
+        empty.classList.toggle('hidden', cards.length > 0);
+        if (window.lucide) window.lucide.createIcons({attrs: {'stroke-width': 1.8}});
+    }
+    document.getElementById('add-member').addEventListener('click', () => {
+        list.append(template.content.cloneNode(true)); renumber();
+        list.lastElementChild.querySelector('[data-field="nama_lengkap"]').focus();
+    });
+    list.addEventListener('click', event => {
+        const button = event.target.closest('.remove-member');
+        if (button) { button.closest('.member-card').remove(); renumber(); }
+    });
+    renumber();
+})();
+</script>
