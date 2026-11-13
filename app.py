@@ -239,7 +239,7 @@ def simpan_kk():
         kk_id = cur.lastrowid
         insert_members(cur, kk_id, members)
         conn.commit()
-        flash("Data Kartu Keluarga berhasil disimpan.", "success")
+        flash("Data Kartu Keluarga berhasil disimpan.", "created")
         return redirect(url_for("detail_kk", kk_id=kk_id))
     except mysql.connector.IntegrityError:
         if conn: conn.rollback()

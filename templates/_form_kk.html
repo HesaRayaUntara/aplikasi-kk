@@ -1,4 +1,4 @@
-﻿{% set identity_fields = [
+{% set identity_fields = [
     ('no_kk', 'Nomor KK'), ('kepala_keluarga', 'Kepala Keluarga'),
     ('alamat', 'Alamat'), ('rt', 'RT'), ('rw', 'RW'),
     ('desa_kelurahan', 'Desa / Kelurahan'), ('kecamatan', 'Kecamatan'),
@@ -16,16 +16,19 @@
 ] %}
 {% set input_class = 'form-control' %}
 
+{% if not hide_form_messages %}
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
     <div role="alert" class="mb-4 flex items-start gap-3 rounded-xl border p-4 text-sm {% if category == 'error' %}border-red-200 bg-red-50 text-red-800{% else %}border-emerald-200 bg-emerald-50 text-emerald-800{% endif %}"><i data-lucide="{% if category == 'error' %}circle-alert{% else %}circle-check{% endif %}" class="mt-0.5 h-5 w-5 shrink-0"></i><p>{{ message }}</p></div>
     {% endfor %}
 {% endwith %}
+{% endif %}
 
-<form id="kk-form" method="post" action="{{ form_action }}" class="space-y-6">
+<form id="kk-form" method="post" action="{{ form_action }}" class="{{ form_layout_class|default('flex flex-col gap-6') }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
     {% if filename is defined %}<input type="hidden" name="source_filename" value="{{ filename }}">{% endif %}
-    <section class="panel-card">
+    {% if filename is defined %}<div class="{{ identity_source_layout_class }}">{% endif %}
+    <section class="panel-card {{ identity_layout_class|default('') }}">
         <div class="mb-5 flex items-start gap-3 border-b border-slate-100 pb-4"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><i data-lucide="contact-round" class="h-5 w-5"></i></span><div><h2 class="text-lg font-semibold text-slate-900">Identitas Kartu Keluarga</h2><p class="mt-1 text-sm text-slate-500">Periksa dan lengkapi informasi pada dokumen.</p></div></div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {% for key, label in identity_fields %}
@@ -41,7 +44,23 @@
         </div>
     </section>
 
-    <section class="panel-card">
+    {% if filename is defined %}
+    <aside class="min-w-0 order-1 xl:order-2 xl:col-start-2 xl:sticky xl:top-24 xl:self-start">
+        <section class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="mb-3 flex items-center gap-2">
+                <i data-lucide="scan" class="h-4 w-4 text-blue-700"></i>
+                <h2 class="text-sm font-semibold text-slate-900">Dokumen sumber</h2>
+            </div>
+            <a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" rel="noopener" title="Buka gambar ukuran penuh">
+                <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Gambar KK sebagai acuan pemeriksaan" class="max-h-[min(60vh,36rem)] w-full rounded-lg border border-slate-200 bg-slate-50 object-contain transition hover:border-blue-300">
+            </a>
+            <p class="mt-2 break-all text-xs text-slate-500">{{ filename }}</p>
+            <p class="mt-2 text-xs leading-5 text-slate-500">Pilih gambar untuk melihat ukuran penuh. Cocokkan tulisan dengan hasil baca di formulir.</p>
+        </section>
+    </aside>
+    {% endif %}
+
+    <section class="panel-card {{ members_layout_class|default('') }}">
         <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-start gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700"><i data-lucide="users-round" class="h-5 w-5"></i></span><div><h2 class="text-lg font-semibold text-slate-900">Anggota Keluarga</h2><p class="mt-1 text-sm text-slate-500">Tanggal gunakan format DD-MM-YYYY atau YYYY-MM-DD.</p></div></div>
             <button type="button" id="add-member" class="btn-secondary shrink-0"><i data-lucide="user-round-plus" class="h-4 w-4"></i>Tambah anggota</button>
@@ -58,8 +77,6 @@
                     <div>
                         <label for="member-{{ member_index }}-{{ key }}" class="mb-1.5 block text-sm font-medium text-slate-700">{{ label }}{% if key == 'nama_lengkap' %}<span class="text-red-600"> *</span>{% endif %}</label>
                         <input id="member-{{ member_index }}-{{ key }}" name="anggota[{{ member_index }}][{{ key }}]" type="text" value="{{ member.get(key, '') or '' }}" class="{{ input_class }}" data-field="{{ key }}" {% if key == 'nama_lengkap' %}required{% endif %} {% if key == 'nik' %}inputmode="numeric" maxlength="30"{% elif key in ['tanggal_lahir', 'tanggal_perkawinan'] %}placeholder="DD-MM-YYYY" inputmode="numeric"{% endif %}>
-                        {% set confidence = member.get(key ~ '_confidence') %}
-                        {% if confidence is not none %}<p class="mt-1 text-xs {% if confidence < 0.35 %}text-red-600{% elif confidence < 0.60 %}text-amber-600{% else %}text-green-700{% endif %}">Confidence OCR: {{ (confidence * 100)|round(1) }}%{% if confidence < 0.60 %} · Periksa kembali{% endif %}</p>{% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -68,9 +85,10 @@
         </div>
         <p id="no-members" class="{% if members %}hidden {% endif %}mt-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Belum ada anggota. Tambahkan setidaknya satu anggota keluarga.</p>
     </section>
+    {% if filename is defined %}</div>{% endif %}
 
-    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-        <a href="{{ cancel_url }}" class="btn-secondary min-h-11 justify-center">Batal</a>
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between {{ actions_layout_class|default('') }}">
+        <a href="{{ cancel_url }}" class="btn-secondary min-h-11 justify-center"><i data-lucide="{% if cancel_label is defined %}rotate-ccw{% else %}arrow-left{% endif %}" class="h-4 w-4"></i>{{ cancel_label|default('Batal') }}</a>
         <button type="submit" class="btn-success min-h-11 justify-center"><i data-lucide="save" class="h-4 w-4"></i>{{ submit_label }}</button>
     </div>
 </form>

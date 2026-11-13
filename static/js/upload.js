@@ -9,8 +9,13 @@
     const feedback = document.getElementById('uploadFeedback');
     const button = document.getElementById('uploadButton');
     const buttonText = document.getElementById('uploadButtonText');
+    const loading = document.getElementById('ocrLoading');
+    const loadingTitle = document.getElementById('ocrLoadingTitle');
+    const loadingImage = document.getElementById('loadingDocumentPreview');
+    const loadingImagePlaceholder = document.getElementById('loadingPreviewPlaceholder');
     const allowedTypes = new Set(['image/jpeg', 'image/png']);
     const maxSize = 5 * 1024 * 1024;
+    let submitting = false;
 
     function showError(message) {
         feedback.textContent = message;
@@ -61,18 +66,52 @@
         displayFile(file);
     });
     form.addEventListener('submit', event => {
-        if (!fileInput.files.length) {
+        const file = fileInput.files[0];
+        if (!file) {
             event.preventDefault();
             showError('Pilih gambar Kartu Keluarga sebelum melanjutkan.');
             return;
         }
+        if (!allowedTypes.has(file.type)) {
+            event.preventDefault();
+            showError('Format file harus JPG, JPEG, atau PNG.');
+            return;
+        }
+        if (file.size > maxSize) {
+            event.preventDefault();
+            showError('Ukuran gambar maksimal 5 MB.');
+            return;
+        }
+        if (submitting) {
+            event.preventDefault();
+            return;
+        }
+
+        event.preventDefault();
+        submitting = true;
+        feedback.classList.add('hidden');
         button.disabled = true;
         button.classList.add('cursor-wait', 'opacity-80');
         button.querySelector('[data-lucide]')?.remove();
         const spinner = document.createElement('span');
         spinner.className = 'h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white';
         button.prepend(spinner);
-        buttonText.textContent = 'Sedang membaca gambar…';
+        buttonText.textContent = 'Sedang membaca gambar...';
         button.setAttribute('aria-live', 'polite');
+
+        // Mulai tampilan loading dari bagian atas agar judul dan status tidak tertinggal di luar viewport.
+        window.scrollTo(0, 0);
+        loading.scrollTop = 0;
+        loadingImage.src = previewImage.src;
+        loadingImage.classList.remove('hidden');
+        loadingImagePlaceholder.classList.add('hidden');
+        loading.classList.remove('hidden');
+        loading.setAttribute('aria-hidden', 'false');
+        loading.setAttribute('aria-busy', 'true');
+        document.body.classList.add('overflow-hidden');
+        loadingTitle.focus({preventScroll:true});
+
+        // Beri browser satu frame untuk menampilkan skeleton sebelum POST dimulai.
+        requestAnimationFrame(() => HTMLFormElement.prototype.submit.call(form));
     });
 })();
